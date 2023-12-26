@@ -28,4 +28,8 @@ Le diagramme ci-dessus décrit le flux de données à travers les différents co
   
   ![viz-30-20](https://github.com/ibra-mboula/IOT-LoRa-LoRaWAN/assets/78673312/6d3c70f1-a6d3-4c86-9f62-6f71820e7f0f)
 
+  ![5de5e33b-83af-43e8-88da-2f19b5ab4200](https://github.com/ibra-mboula/IOT-LoRa-LoRaWAN/assets/78673312/25bf0402-819e-42de-b8ff-f293d6a5398c)
+![c4a9c11d-c888-4fae-8dea-a20453271570](https://github.com/ibra-mboula/IOT-LoRa-LoRaWAN/assets/78673312/abfe2d70-2335-498a-a472-29ad3e1e1d3e)
+
+
   ![viz-arduino-20](https://github.com/ibra-mboula/IOT-LoRa-LoRaWAN/assets/78673312/b1c18b9f-ef73-4fd8-9687-b9af80d04e30)
