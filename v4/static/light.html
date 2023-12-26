@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualisation des Données IoT</title>
+
+    <a href="/">Temperature</a>
+    <a href="/humidity">Humidity</a>
+    <a href="/light">light</a>
+
+    <style>
+        .chart-container {
+            width: 1500px;
+            height: 400px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.2.1/chartjs-plugin-zoom.js"></script>
+</head>
+<body>
+    
+
+    <h1>Visualisation des Données IoT : light</h1>
+
+    <!-- Bouton pour revenir à l'affichage de toutes les mesures -->
+    <button onclick="fetchMeasures()">Afficher toutes les mesures</button>
+
+    <!-- Champ de saisie de date pour filtrer les données Arduino -->
+    <div>
+        <input type="date" id="dateFilterArduino" name="dateFilterArduino">
+        <button onclick="fetchArduinoDataForDate()">Afficher les données Arduino du jour sélectionné</button>
+    </div>
+
+    <!-- Champ de saisie pour spécifier le nombre de mesures Arduino -->
+    <div>
+        <input type="text" id="arduinoMeasureCount" placeholder="Nombre de mesures Arduino">
+        <button onclick="fetchCustomArduinoMeasures()">Afficher les mesures Arduino spécifiées</button>
+    </div>
+
+    <div>
+        <button onclick="toggleChartType('arduinoChart')">Changer le type de graphique (Arduino)</button>
+        <button onclick="toggleChartType('stmChart')">Changer le type de graphique (STM)</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="arduinoChart"></canvas>
+    </div>
+
+    <!-- Champ de saisie pour spécifier le nombre de mesures -->
+    <div>
+        <input type="text" id="measureCount" placeholder="Nombre de mesures">
+        <button onclick="fetchCustomMeasures()">Afficher les mesures spécifiées</button>
+    </div>
+
+    <!-- Champ de saisie de date pour filtrer les données -->
+    <div>
+        <input type="date" id="dateFilter" name="dateFilter">
+        <button onclick="fetchDataForDate()">Afficher les données du jour sélectionné</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="stmChart"></canvas>
+    </div>
+
+    <script>
+        let arduinoChart;
+        let stmChart;
+        let lastMeasureCount = null;
+        let selectedDateArduino = null;
+        let selectedDateStm = null;
+        let displayMode = 'all'; 
+
+        Chart.defaults.plugins.zoom.zoom.rangeMin = { x: null, y: null };
+        Chart.defaults.plugins.zoom.zoom.rangeMax = { x: null, y: null };
+        Chart.defaults.plugins.zoom.pan.rangeMin = { x: null, y: null };
+        Chart.defaults.plugins.zoom.pan.rangeMax = { x: null, y: null };
+
+        function fetchMeasures(count = null) {
+            lastMeasureCount = count;
+            let url = '/data';
+            if (count !== null) {
+                url = `/data/stm/last/${count}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(combinedData => {
+                    if (count !== null) {
+                        // Supposons que les données spécifiées ne contiennent que les mesures STM
+                        updateChart('stmChart', combinedData, 'light STM', 'rgb(54, 162, 235)', stmChart);
+                    } else {
+                        // Mettre à jour les deux graphiques pour Arduino et STM
+                        updateChart('arduinoChart', combinedData.arduino, 'light Arduino', 'rgb(255, 99, 132)', arduinoChart);
+                        updateChart('stmChart', combinedData.stm, 'light STM', 'rgb(54, 162, 235)', stmChart);
+                    }
+                })
+                .catch(error => console.error('Erreur lors de la récupération des données:', error));
+        }
+
+        function fetchArduinoDataForDate() {
+            const selectedDate = document.getElementById('dateFilterArduino').value;
+            if (selectedDate) {
+                selectedDateArduino = selectedDate;
+                displayMode = 'selectedDateArduino';
+                fetch(`/data/arduino/date/${selectedDate}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateChart('arduinoChart', data, 'light Arduino', 'rgb(255, 99, 132)', arduinoChart);
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des données Arduino:', error);
+                        alert('Erreur lors de la récupération des données Arduino.');
+                    });
+            } else {
+                alert('Veuillez sélectionner une date pour Arduino.');
+            }
+        }
+
+        function fetchCustomArduinoMeasures() {
+            const count = document.getElementById('arduinoMeasureCount').value;
+            if (count) {
+                fetch(`/data/arduino/last/${parseInt(count, 10)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateChart('arduinoChart', data, 'light Arduino', 'rgb(255, 99, 132)', arduinoChart);
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des données Arduino:', error);
+                        alert('Erreur lors de la récupération des données Arduino.');
+                    });
+            } else {
+                alert('Veuillez entrer un nombre valide de mesures Arduino à afficher.');
+            }
+        }
+
+        function fetchDataForDate() {
+            const selectedDate = document.getElementById('dateFilter').value;
+            if (selectedDate) {
+                selectedDateStm = selectedDate;
+                displayMode = 'selectedDateStm';
+                fetch(`/data/stm/date/${selectedDate}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateChart('stmChart', data, 'light STM', 'rgb(54, 162, 235)', stmChart);
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des données:', error);
+                        alert('Erreur lors de la récupération des données.');
+                    });
+            } else {
+                alert('Veuillez sélectionner une date.');
+            }
+        }
+
+        function fetchCustomMeasures() {
+            const count = document.getElementById('measureCount').value;
+            if (count) {
+                fetchMeasures(parseInt(count, 10));
+            } else {
+                alert('Veuillez entrer un nombre valide de mesures à afficher.');
+            }
+        }
+
+        function toggleChartType(chartId) {
+            const chart = chartId === 'arduinoChart' ? arduinoChart : stmChart;
+            if (chart) {
+                const currentType = chart.config.type;
+                const newType = currentType === 'bar' ? 'line' : 'bar';
+                chart.config.type = newType;
+                chart.update();
+            }
+        }
+
+        function updateChart(canvasId, data, label, color, chart) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const sortedData = data.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+            const labels = sortedData.map(entry => moment(entry.date + ' ' + entry.time).format('YYYY-MM-DD HH:mm:ss'));
+            const dataPoints = sortedData.map(entry => entry.light);
+
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    backgroundColor: color,
+                    borderColor: color,
+                    data: dataPoints,
+                    fill: false,
+                    pointRadius: 1,
+                    borderWidth: 1,
+                }]
+            };
+
+            const chartOptions = {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            parser: 'YYYY-MM-DD HH:mm:ss',
+                            tooltipFormat: 'YYYY-MM-DD HH:mm:ss',
+                            unit: 'second',
+                            displayFormats: {
+                                minute: 'HH:mm:ss',
+                                hour: 'HH:mm',
+                                day: 'MMM D'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxRotation: 90,
+                            minRotation: 90,
+                            maxTicksLimit: 20
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'light'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x'
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                mode: 'x'
+                            },
+                            pinch: {
+                                enabled: true,
+                                mode: 'x'
+                            },
+                            mode: 'x'
+                        }
+                    }
+                },
+                maintainAspectRatio: false,
+                responsive: true
+            };
+
+            if (chart) {
+                chart.data = chartData;
+                chart.options = chartOptions;
+                chart.update();
+            } else {
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: chartData,
+                    options: chartOptions
+                });
+                if (canvasId === 'arduinoChart') {
+                    arduinoChart = chart;
+                } else if (canvasId === 'stmChart') {
+                    stmChart = chart;
+                }
+            }
+        }
+
+        window.onload = function() {
+            fetchMeasures();
+            setInterval(() => {
+                if (displayMode === 'all') {
+                    fetchMeasures(lastMeasureCount);
+                } else if (displayMode === 'selectedDateArduino') {
+                    fetchArduinoDataForDate();
+                } else if (displayMode === 'selectedDateStm') {
+                    fetchDataForDate();
+                }
+            }, 10000);
+        };
+    </script>
+</body>
+</html>
