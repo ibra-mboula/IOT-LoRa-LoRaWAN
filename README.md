@@ -24,8 +24,8 @@ Le diagramme ci-dessus décrit le flux de données à travers les différents co
 - Communication: LoRaWAN, MQTT via The Things Network
 - Backend: Flask
 - Base de données: MongoDB
-- Visualisation: Bibliothèques JavaScript pour les graphiques
-
+- Visualisation: Bibliothèques JavaScript pour les graphiques ---> chart.js
+  
   ![viz-30-20](https://github.com/ibra-mboula/IOT-LoRa-LoRaWAN/assets/78673312/6d3c70f1-a6d3-4c86-9f62-6f71820e7f0f)
 
   ![viz-arduino-20](https://github.com/ibra-mboula/IOT-LoRa-LoRaWAN/assets/78673312/b1c18b9f-ef73-4fd8-9687-b9af80d04e30)
